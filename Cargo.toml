@@ -1,0 +1,18 @@
+[package]
+name = "cubecv"
+version = "0.1.0"
+edition = "2021"
+authors = ["cubecv contributors"]
+license = "MIT"
+description = "A high-performance parallel computing computer vision library using CubeCL"
+repository = "https://github.com/Qinka/cubecv"
+keywords = ["computer-vision", "image-processing", "gpu", "cubecl", "parallel"]
+categories = ["computer-vision", "multimedia::images"]
+
+[dependencies]
+cubecl = { version = "0.2", features = ["wgpu"] }
+image = "0.25"
+bytemuck = "1.14"
+
+[dev-dependencies]
+approx = "0.5"
