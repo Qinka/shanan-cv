@@ -10,8 +10,8 @@ use crate::convert::ImageTensor;
 ///
 /// # Returns
 ///
-/// A new ImageTensor in HSV format where:
-/// - H (Hue) is in range [0, 360]
+/// A new ImageTensor in HSV format where all values are normalized to [0, 1]:
+/// - H (Hue) is normalized from [0, 360°] to [0, 1]
 /// - S (Saturation) is in range [0, 1]
 /// - V (Value) is in range [0, 1]
 ///
@@ -71,7 +71,7 @@ pub fn rgb_to_hsv(input: &ImageTensor) -> ImageTensor {
 ///
 /// # Arguments
 ///
-/// * `input` - Input ImageTensor in HSV format
+/// * `input` - Input ImageTensor in HSV format where H, S, and V are all normalized to [0, 1]
 ///
 /// # Returns
 ///
@@ -187,5 +187,37 @@ mod tests {
         
         let s = output.get_pixel(0, 0, 1);
         assert!(s.abs() < 0.01); // Saturation should be 0
+    }
+
+    #[test]
+    fn test_hsv_manipulation_pipeline() {
+        // Test modifying HSV values and converting back to RGB
+        let data = vec![0.5, 0.3, 0.7, 0.2, 0.8, 0.4];
+        let input = ImageTensor::new(2, 1, 3, data);
+        
+        // Convert to HSV
+        let mut hsv = rgb_to_hsv(&input);
+        
+        // Boost saturation by 1.5x (clamp to 1.0)
+        for y in 0..hsv.height {
+            for x in 0..hsv.width {
+                let s = hsv.get_pixel(x, y, 1);
+                hsv.set_pixel(x, y, 1, (s * 1.5).min(1.0));
+            }
+        }
+        
+        // Convert back to RGB
+        let output = hsv_to_rgb(&hsv);
+        
+        // Verify dimensions are preserved
+        assert_eq!(output.width, 2);
+        assert_eq!(output.height, 1);
+        assert_eq!(output.channels, 3);
+        
+        // Verify RGB values are still in valid range
+        for pixel in output.data.iter() {
+            assert!(*pixel >= 0.0 && *pixel <= 1.0, 
+                   "RGB value {} out of range [0, 1]", pixel);
+        }
     }
 }
