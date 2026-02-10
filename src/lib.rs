@@ -9,6 +9,9 @@
 //! - GPU-accelerated image processing using CubeCL
 //! - Seamless integration with image-rs types
 //! - High-performance parallel operations
+//! - HWC/CHW format conversions for deep learning frameworks
+//! - imageproc-inspired operations (morphology, filtering, etc.)
+//! - Visualization tools for deep learning results
 //!
 //! ## Example
 //!
@@ -22,6 +25,8 @@
 
 pub mod convert;
 pub mod ops;
+pub mod imageproc;
+pub mod draw;
 pub mod prelude;
 
 pub use convert::ImageTensor;

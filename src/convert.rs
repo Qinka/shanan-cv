@@ -104,6 +104,99 @@ impl ImageTensor {
         let idx = ((y * self.width + x) * self.channels + c) as usize;
         self.data[idx] = value;
     }
+
+    /// Create ImageTensor from raw HWC (Height, Width, Channels) format data.
+    ///
+    /// # Arguments
+    ///
+    /// * `width` - Image width
+    /// * `height` - Image height
+    /// * `channels` - Number of channels
+    /// * `hwc_data` - Data in HWC format where pixels are stored as [h][w][c]
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use cubecv::ImageTensor;
+    ///
+    /// let hwc_data = vec![0.0; 10 * 10 * 3];
+    /// let tensor = ImageTensor::from_hwc_data(10, 10, 3, hwc_data);
+    /// ```
+    pub fn from_hwc_data(width: u32, height: u32, channels: u32, hwc_data: Vec<f32>) -> Self {
+        Self::new(width, height, channels, hwc_data)
+    }
+
+    /// Create ImageTensor from raw CHW (Channels, Height, Width) format data.
+    ///
+    /// # Arguments
+    ///
+    /// * `width` - Image width
+    /// * `height` - Image height
+    /// * `channels` - Number of channels
+    /// * `chw_data` - Data in CHW format where pixels are stored as [c][h][w]
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use cubecv::ImageTensor;
+    ///
+    /// let chw_data = vec![0.0; 3 * 10 * 10];
+    /// let tensor = ImageTensor::from_chw_data(10, 10, 3, chw_data);
+    /// ```
+    pub fn from_chw_data(width: u32, height: u32, channels: u32, chw_data: Vec<f32>) -> Self {
+        assert_eq!(
+            chw_data.len(),
+            (width * height * channels) as usize,
+            "Data length must match dimensions"
+        );
+
+        let mut hwc_data = vec![0.0; (width * height * channels) as usize];
+
+        for c in 0..channels {
+            for h in 0..height {
+                for w in 0..width {
+                    let chw_idx = (c * height * width + h * width + w) as usize;
+                    let hwc_idx = ((h * width + w) * channels + c) as usize;
+                    hwc_data[hwc_idx] = chw_data[chw_idx];
+                }
+            }
+        }
+
+        Self {
+            width,
+            height,
+            channels,
+            data: hwc_data,
+        }
+    }
+
+    /// Convert to HWC (Height, Width, Channels) format data.
+    ///
+    /// Returns a vector in HWC format where pixels are stored as [h][w][c].
+    /// This is the native format of ImageTensor, so this is a clone operation.
+    pub fn to_hwc_data(&self) -> Vec<f32> {
+        self.data.clone()
+    }
+
+    /// Convert to CHW (Channels, Height, Width) format data.
+    ///
+    /// Returns a vector in CHW format where pixels are stored as [c][h][w].
+    /// This format is commonly used in deep learning frameworks like PyTorch.
+    pub fn to_chw_data(&self) -> Vec<f32> {
+        let mut chw_data = vec![0.0; self.data.len()];
+
+        for c in 0..self.channels {
+            for h in 0..self.height {
+                for w in 0..self.width {
+                    let hwc_idx = ((h * self.width + w) * self.channels + c) as usize;
+                    let chw_idx = (c * self.height * self.width + h * self.width + w) as usize;
+                    chw_data[chw_idx] = self.data[hwc_idx];
+                }
+            }
+        }
+
+        chw_data
+    }
 }
 
 #[cfg(test)]
@@ -137,5 +230,67 @@ mod tests {
         
         let reconstructed = tensor.to_dynamic_image();
         assert_eq!(reconstructed.dimensions(), (10, 10));
+    }
+
+    #[test]
+    fn test_hwc_chw_conversion() {
+        // Create a simple 2x2x3 tensor with known values
+        // HWC: [R0,G0,B0, R1,G1,B1, R2,G2,B2, R3,G3,B3]
+        let hwc_data = vec![
+            1.0, 2.0, 3.0,  // pixel (0,0)
+            4.0, 5.0, 6.0,  // pixel (1,0)
+            7.0, 8.0, 9.0,  // pixel (0,1)
+            10.0, 11.0, 12.0, // pixel (1,1)
+        ];
+        
+        let tensor = ImageTensor::from_hwc_data(2, 2, 3, hwc_data.clone());
+        
+        // Convert to CHW
+        let chw_data = tensor.to_chw_data();
+        
+        // CHW should be: [R0,R1,R2,R3, G0,G1,G2,G3, B0,B1,B2,B3]
+        let expected_chw = vec![
+            1.0, 4.0, 7.0, 10.0,  // R channel
+            2.0, 5.0, 8.0, 11.0,  // G channel
+            3.0, 6.0, 9.0, 12.0,  // B channel
+        ];
+        
+        assert_eq!(chw_data, expected_chw);
+        
+        // Convert back to HWC
+        let tensor2 = ImageTensor::from_chw_data(2, 2, 3, chw_data);
+        let hwc_data2 = tensor2.to_hwc_data();
+        
+        assert_eq!(hwc_data, hwc_data2);
+    }
+
+    #[test]
+    fn test_from_chw_data() {
+        // Test creating tensor from CHW data
+        let chw_data = vec![
+            1.0, 2.0, 3.0, 4.0,  // Channel 0
+            5.0, 6.0, 7.0, 8.0,  // Channel 1
+            9.0, 10.0, 11.0, 12.0, // Channel 2
+        ];
+        
+        let tensor = ImageTensor::from_chw_data(2, 2, 3, chw_data);
+        
+        assert_eq!(tensor.width, 2);
+        assert_eq!(tensor.height, 2);
+        assert_eq!(tensor.channels, 3);
+        
+        // Verify pixel values
+        assert_eq!(tensor.get_pixel(0, 0, 0), 1.0);
+        assert_eq!(tensor.get_pixel(0, 0, 1), 5.0);
+        assert_eq!(tensor.get_pixel(0, 0, 2), 9.0);
+    }
+
+    #[test]
+    fn test_hwc_data_is_native_format() {
+        let data = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
+        let tensor = ImageTensor::from_hwc_data(2, 1, 3, data.clone());
+        
+        // to_hwc_data should return the same data since it's native format
+        assert_eq!(tensor.to_hwc_data(), data);
     }
 }

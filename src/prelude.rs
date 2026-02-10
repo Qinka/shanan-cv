@@ -4,4 +4,6 @@
 
 pub use crate::convert::ImageTensor;
 pub use crate::ops::*;
+pub use crate::imageproc::*;
+pub use crate::draw::*;
 pub use image::DynamicImage;
