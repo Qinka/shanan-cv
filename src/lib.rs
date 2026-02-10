@@ -28,9 +28,5 @@ pub use convert::ImageTensor;
 
 #[cfg(test)]
 mod tests {
-    #[test]
-    fn test_module_structure() {
-        // Basic test to ensure modules are properly loaded
-        assert!(true);
-    }
+    // Basic module structure test - no assertions needed as the module compiles
 }

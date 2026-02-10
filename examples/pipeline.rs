@@ -19,8 +19,8 @@ fn main() {
             let dx = x as f32 - width as f32 / 2.0;
             let dy = y as f32 - height as f32 / 2.0;
             let dist = (dx * dx + dy * dy).sqrt();
-            let max_dist = (width as f32 / 2.0);
-            let intensity = (1.0 - (dist / max_dist).min(1.0));
+            let max_dist = width as f32 / 2.0;
+            let intensity = 1.0 - (dist / max_dist).min(1.0);
 
             data[idx] = intensity;           // R
             data[idx + 1] = intensity * 0.5; // G
