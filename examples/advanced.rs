@@ -33,7 +33,7 @@ fn main() {
     println!("\n=== Part 2: imageproc-inspired Operations ===");
     
     let data = vec![0.5; 50 * 50 * 3];
-    let mut test_img = ImageTensor::new(50, 50, 3, data);
+    let test_img = ImageTensor::new(50, 50, 3, data);
     
     // Convert to grayscale for morphology
     let gray = grayscale(&test_img);
@@ -41,10 +41,10 @@ fn main() {
     
     // Morphological operations
     println!("\n2a. Morphological Operations:");
-    let eroded = erode(&gray, 3);
+    let _eroded = erode(&gray, 3);
     println!("  Applied erosion with kernel size 3");
     
-    let dilated = dilate(&gray, 3);
+    let _dilated = dilate(&gray, 3);
     println!("  Applied dilation with kernel size 3");
     
     // Filtering
@@ -60,7 +60,7 @@ fn main() {
     let resized = resize_bilinear(&test_img, 100, 100);
     println!("  Resized to {}x{}", resized.width, resized.height);
     
-    let rotated = rotate(&test_img, 45.0);
+    let _rotated = rotate(&test_img, 45.0);
     println!("  Rotated by 45 degrees");
     
     // Statistics
@@ -148,10 +148,10 @@ fn main() {
     println!("  Applied jet colormap to heatmap ({}x{})", 
              heatmap_colored.width, heatmap_colored.height);
     
-    let heatmap_hot = apply_heatmap(&heatmap, "hot");
+    let _heatmap_hot = apply_heatmap(&heatmap, "hot");
     println!("  Applied hot colormap to heatmap");
     
-    let heatmap_viridis = apply_heatmap(&heatmap, "viridis");
+    let _heatmap_viridis = apply_heatmap(&heatmap, "viridis");
     println!("  Applied viridis colormap to heatmap");
     
     // Overlay heatmap

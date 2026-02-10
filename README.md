@@ -10,16 +10,34 @@ CubeCV provides GPU-accelerated image processing operations that work seamlessly
 - 🖼️ **image-rs Integration**: Seamless conversion between `DynamicImage` and internal tensor format
 - 🎨 **Rich Operations**: Common computer vision operations out of the box
 - 📦 **Easy to Use**: Simple, idiomatic Rust API
+- 🔄 **Format Conversions**: HWC ↔ CHW tensor format conversions for deep learning frameworks
+- 🛠️ **imageproc Features**: Morphology, filtering, geometric transformations, and statistics
+- 🎯 **DL Visualization**: Tools for visualizing detection, segmentation, and pose estimation results
 
 ## Supported Operations
 
-### Color Conversions
+### Core Operations
 - **Grayscale**: Convert RGB/RGBA images to grayscale using ITU-R BT.601 weights
 - **RGB ↔ HSV**: Bidirectional color space transformations
-
-### Filtering
 - **Gaussian Blur**: Smooth images with configurable sigma
 - **Edge Detection**: Sobel edge detection filter
+
+### Format Conversions
+- **HWC ↔ CHW**: Convert between Height-Width-Channel and Channel-Height-Width formats
+- **Image-rs Integration**: Seamless conversion to/from `DynamicImage`
+
+### imageproc-inspired Operations
+- **Morphological**: Erosion and dilation
+- **Filtering**: Median filter, bilateral filter
+- **Geometric**: Bilinear resize, rotation
+- **Statistics**: Histogram computation
+
+### Deep Learning Visualization
+- **Bounding Boxes**: Draw detection boxes with labels and confidence
+- **Segmentation**: Single and multi-class mask overlays
+- **Keypoints**: Draw keypoints and skeletal connections
+- **Heatmaps**: Apply colormaps (jet, hot, viridis) to attention/saliency maps
+- **Text**: Simple text rendering
 
 ## Installation
 
@@ -110,6 +128,48 @@ let result = {
 };
 ```
 
+### HWC/CHW Format Conversions
+
+```rust
+use cubecv::prelude::*;
+
+// Create from CHW format (PyTorch style)
+let chw_data = vec![/* channel-first data */];
+let tensor = ImageTensor::from_chw_data(width, height, channels, chw_data);
+
+// Convert to CHW for deep learning frameworks
+let chw_output = tensor.to_chw_data();
+
+// HWC is the native format
+let hwc_data = tensor.to_hwc_data();
+```
+
+### Deep Learning Visualization
+
+```rust
+use cubecv::prelude::*;
+
+// Draw bounding boxes
+let bbox = BoundingBox::new(10, 10, 50, 50)
+    .with_label("person")
+    .with_confidence(0.95);
+draw_bbox(&mut img, &bbox, [1.0, 0.0, 0.0], 2);
+
+// Overlay segmentation mask
+draw_segmentation_mask(&mut img, &mask, [0.0, 1.0, 0.0], 0.5);
+
+// Draw keypoints and skeleton
+let keypoints = vec![Keypoint::new(50, 50), Keypoint::new(100, 100)];
+draw_keypoints(&mut img, &keypoints, [1.0, 0.0, 0.0], 3);
+
+let connections = vec![(0, 1)];
+draw_skeleton(&mut img, &keypoints, &connections, [0.0, 1.0, 0.0], 2);
+
+// Apply heatmap
+let heatmap_colored = apply_heatmap(&attention_map, "jet");
+overlay_heatmap(&mut img, &attention_map, "viridis", 0.5);
+```
+
 ## Running Examples
 
 The library includes example programs demonstrating various features:
@@ -120,6 +180,9 @@ cargo run --example basic
 
 # Image processing pipeline
 cargo run --example pipeline
+
+# Advanced features (HWC/CHW, imageproc, visualization)
+cargo run --example advanced
 ```
 
 ## API Documentation
@@ -141,18 +204,60 @@ pub struct ImageTensor {
 - `new(width, height, channels, data)`: Create from raw data
 - `from_dynamic_image(&DynamicImage)`: Convert from image-rs
 - `to_dynamic_image()`: Convert to image-rs
+- `from_hwc_data(...)`: Create from HWC format data
+- `from_chw_data(...)`: Create from CHW format data
+- `to_hwc_data()`: Export to HWC format
+- `to_chw_data()`: Export to CHW format
 - `get_pixel(x, y, c)`: Get pixel value
 - `set_pixel(x, y, c, value)`: Set pixel value
 
-### Operations
+### Core Operations
 
 All operations take an `&ImageTensor` and return a new `ImageTensor`.
 
+**Basic Operations:**
 - `grayscale(&ImageTensor) -> ImageTensor`
 - `gaussian_blur(&ImageTensor, sigma: f32) -> ImageTensor`
 - `sobel_edge_detection(&ImageTensor) -> ImageTensor`
 - `rgb_to_hsv(&ImageTensor) -> ImageTensor`
 - `hsv_to_rgb(&ImageTensor) -> ImageTensor`
+
+**Morphological Operations:**
+- `erode(&ImageTensor, kernel_size: u32) -> ImageTensor`
+- `dilate(&ImageTensor, kernel_size: u32) -> ImageTensor`
+
+**Filtering:**
+- `median_filter(&ImageTensor, kernel_size: u32) -> ImageTensor`
+- `bilateral_filter(&ImageTensor, kernel_size: u32, sigma_spatial: f32, sigma_range: f32) -> ImageTensor`
+
+**Geometric Transformations:**
+- `resize_bilinear(&ImageTensor, new_width: u32, new_height: u32) -> ImageTensor`
+- `rotate(&ImageTensor, angle_degrees: f32) -> ImageTensor`
+
+**Statistics:**
+- `histogram(&ImageTensor, bins: usize) -> Vec<f32>`
+
+### Visualization Tools
+
+**Bounding Boxes:**
+- `draw_bbox(&mut ImageTensor, &BoundingBox, color: [f32; 3], thickness: u32)`
+- `BoundingBox::new(x, y, width, height).with_label(...).with_confidence(...)`
+
+**Segmentation:**
+- `draw_segmentation_mask(&mut ImageTensor, &mask, color: [f32; 3], alpha: f32)`
+- `draw_multiclass_segmentation(&mut ImageTensor, &mask, colors: &[[f32; 3]], alpha: f32)`
+
+**Keypoints:**
+- `draw_keypoints(&mut ImageTensor, keypoints: &[Keypoint], color: [f32; 3], radius: u32)`
+- `draw_skeleton(&mut ImageTensor, keypoints: &[Keypoint], connections: &[(usize, usize)], color: [f32; 3], thickness: u32)`
+
+**Heatmaps:**
+- `apply_heatmap(&ImageTensor, colormap: &str) -> ImageTensor`
+- `overlay_heatmap(&mut ImageTensor, &heatmap, colormap: &str, alpha: f32)`
+- Supported colormaps: "jet", "hot", "viridis"
+
+**Text:**
+- `draw_text(&mut ImageTensor, text: &str, x: u32, y: u32, color: [f32; 3], scale: f32)`
 
 ## Performance Considerations
 
@@ -162,13 +267,24 @@ The current implementation uses CPU-based processing as a foundation. Future ver
 
 CubeCV is structured into several modules:
 
-- **`convert`**: Image format conversions (image-rs ↔ tensor)
-- **`ops`**: Image processing operations
+- **`convert`**: Image format conversions (image-rs ↔ tensor, HWC ↔ CHW)
+- **`ops`**: Core image processing operations
   - `grayscale`: Grayscale conversion
   - `blur`: Gaussian blur filtering
   - `edge`: Edge detection (Sobel)
-  - `color`: Color space transformations
-- **`prelude`**: Convenient re-exports
+  - `color`: Color space transformations (RGB ↔ HSV)
+- **`imageproc`**: Additional image processing operations
+  - `morphology`: Erosion and dilation
+  - `filter`: Median and bilateral filtering
+  - `geometric`: Resize and rotation
+  - `stats`: Histogram computation
+- **`draw`**: Visualization tools for deep learning
+  - `bbox`: Bounding box drawing
+  - `segmentation`: Mask overlay
+  - `keypoints`: Keypoint and skeleton visualization
+  - `heatmap`: Heatmap and colormap application
+  - `text`: Text rendering
+- **`prelude`**: Convenient re-exports of commonly used items
 
 ## License
 
