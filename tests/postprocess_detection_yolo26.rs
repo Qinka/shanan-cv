@@ -90,6 +90,7 @@ fn run_postprocess_detection_yolo26_cubecl<R: Runtime>(
   let client = R::client(&R::Device::default());
   let yolo26 = Yolo26Config::default()
     .with_shape(640, 640)
+    .with_dim(256)
     .build()
     .unwrap();
 
@@ -165,10 +166,10 @@ fn run_postprocess_detection_yolo26_manual(
       let xmax = ((grid_x + cw) * stride).clamp(0.0, width as f32);
       let ymax = ((grid_y + ch) * stride).clamp(0.0, height as f32);
 
-      bbox_tensor[idx] = xmin;
-      bbox_tensor[idx + H * W] = ymin;
-      bbox_tensor[idx + 2 * H * W] = xmax;
-      bbox_tensor[idx + 3 * H * W] = ymax;
+      bbox_tensor[idx] = (xmin / width as f32).clamp(0.0, 1.0);
+      bbox_tensor[idx + H * W] = (ymin / height as f32).clamp(0.0, 1.0);
+      bbox_tensor[idx + 2 * H * W] = (xmax / width as f32).clamp(0.0, 1.0);
+      bbox_tensor[idx + 3 * H * W] = (ymax / height as f32).clamp(0.0, 1.0);
     }
   }
 

@@ -88,7 +88,7 @@ impl Yolo26 {
 
     let cls_sigmoid = cls.empty_like(client);
 
-    let count = n * c * h * w / self.dim as usize;
+    let count = (n * c * h * w).div_ceil(self.dim as usize);
     sigmoid::launch::<F, R>(
       client,
       CubeCount::Static(count as u32, 1, 1),
@@ -100,7 +100,7 @@ impl Yolo26 {
     let score: DataBuffer<R, F> = DataBuffer::with_shape(&[n, h, w], client);
     let index: DataBuffer<R, I> = DataBuffer::with_shape(&[n, h, w], client);
 
-    let count = n * h * w / self.dim as usize;
+    let count = (n * h * w).div_ceil(self.dim as usize);
     classify::launch::<F, I, R>(
       client,
       CubeCount::Static(count as u32, 1, 1),
@@ -198,6 +198,7 @@ fn bbox<F: Float + CubeScalar + Zero>(
   // 线程全局索引
   let idx = ABSOLUTE_POS;
   if idx < nhw {
+    let one_value = F::new(comptime!(1.0));
     let half_value = F::new(comptime!(0.5));
     let zero_value = F::new(comptime!(0.0));
 
@@ -231,15 +232,15 @@ fn bbox<F: Float + CubeScalar + Zero>(
     let grid_x = F::cast_from(w_idx) + half_value;
     let grid_y = F::cast_from(h_idx) + half_value;
 
-    let xmin = cubecl::prelude::clamp((grid_x - cx) * stride, zero_value, image_width);
-    let ymin = cubecl::prelude::clamp((grid_y - cy) * stride, zero_value, image_height);
-    let xmax = cubecl::prelude::clamp((grid_x + cw) * stride, zero_value, image_width);
-    let ymax = cubecl::prelude::clamp((grid_y + ch) * stride, zero_value, image_height);
+    let xmin = (grid_x - cx) * stride;
+    let ymin = (grid_y - cy) * stride;
+    let xmax = (grid_x + cw) * stride;
+    let ymax = (grid_y + ch) * stride;
 
     // 转换为边界框坐标 (xmin, ymin, xmax, ymax)
-    bbox[idx] = (xmin / image_width).clamp(F::new(0.0), F::new(1.0)); // xmin
-    bbox[idx + nhw] = (ymin / image_height).clamp(F::new(0.0), F::new(1.0)); // ymin
-    bbox[idx + 2 * nhw] = (xmax / image_width).clamp(F::new(0.0), F::new(1.0)); // xmax
-    bbox[idx + 3 * nhw] = (ymax / image_height).clamp(F::new(0.0), F::new(1.0)); // ymax
+    bbox[idx] = (xmin / image_width).clamp(zero_value, one_value); // xmin
+    bbox[idx + nhw] = (ymin / image_height).clamp(zero_value, one_value); // ymin
+    bbox[idx + 2 * nhw] = (xmax / image_width).clamp(zero_value, one_value); // xmax
+    bbox[idx + 3 * nhw] = (ymax / image_height).clamp(zero_value, one_value); // ymax
   }
 }
