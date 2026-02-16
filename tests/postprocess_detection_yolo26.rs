@@ -17,7 +17,7 @@ use cubecl::prelude::*;
 use shanan_cv::{data::DataBuffer, postprocess::detection::Yolo26Config};
 
 const N: usize = 1;
-const CLS: usize = 4;
+const CLS: usize = 8;
 const H: usize = 20;
 const W: usize = 20;
 
