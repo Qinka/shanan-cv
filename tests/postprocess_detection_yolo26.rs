@@ -97,7 +97,7 @@ fn run_postprocess_detection_yolo26_cubecl<R: Runtime>(
   let reg = DataBuffer::<R, f32>::from_slice(&reg, &[N, 4, H, W], &client).unwrap();
 
   let stride = 32.0; // 假设步幅为32
-  let result = yolo26.forward(&client, cls, reg, stride);
+  let result = yolo26.execute(&client, cls, reg, stride);
   match result {
     Ok((score, index, bbox)) => {
       println!("得分张量形状: {:?}", score.shape());

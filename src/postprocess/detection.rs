@@ -73,7 +73,7 @@ impl Yolo26 {
   /// cls: 分类结果，形状为 [N, num_classes, H, W]
   /// reg: 回归结果，形状为 [N, 4, H, W]
   /// 返回 (score, index, bbox) 三个张量，分别是分类得分、类别索引和边界框坐标
-  pub fn forward<R: Runtime, F: Float + CubeElement, I: Int + CubeElement>(
+  pub fn execute<R: Runtime, F: Float + CubeElement, I: Int + CubeElement>(
     &self,
     client: &ComputeClient<R>,
     cls: DataBuffer<R, F>,

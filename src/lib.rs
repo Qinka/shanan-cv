@@ -11,6 +11,8 @@
 //
 // Copyright (C) 2026 Johann Li <me@qinka.pro>, Wareless Group
 
+pub use cubecl;
+
 pub mod data;
 pub mod image;
 pub mod postprocess;
