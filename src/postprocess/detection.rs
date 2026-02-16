@@ -237,9 +237,9 @@ fn bbox<F: Float + CubeScalar + Zero>(
     let ymax = cubecl::prelude::clamp((grid_y + ch) * stride, zero_value, image_height);
 
     // 转换为边界框坐标 (xmin, ymin, xmax, ymax)
-    bbox[idx] = xmin; // xmin
-    bbox[idx + nhw] = ymin; // ymin
-    bbox[idx + 2 * nhw] = xmax; // xmax
-    bbox[idx + 3 * nhw] = ymax; // ymax
+    bbox[idx] = (xmin / image_width).clamp(F::new(0.0), F::new(1.0)); // xmin
+    bbox[idx + nhw] = (ymin / image_height).clamp(F::new(0.0), F::new(1.0)); // ymin
+    bbox[idx + 2 * nhw] = (xmax / image_width).clamp(F::new(0.0), F::new(1.0)); // xmax
+    bbox[idx + 3 * nhw] = (ymax / image_height).clamp(F::new(0.0), F::new(1.0)); // ymax
   }
 }
