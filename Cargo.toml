@@ -1,0 +1,26 @@
+[package]
+name = "shanan-cv"
+version = "0.1.0"
+edition = "2024"
+authors = ["Johann Li <me@qinka.pro> @Qinka"]
+description = "A high-performance parallel computing computer vision library using CubeCL"
+repository = "https://github.com/Qinka/shanan-cv"
+keywords = ["computer-vision", "image-processing", "gpu", "cubecl", "parallel"]
+categories = ["computer-vision", "multimedia::images"]
+
+
+[dependencies]
+cubecl = { version = "0.9" }
+cubek = "0.1.1"
+thiserror = "2.0.18"
+
+
+[features]
+default = ["wgpu", "cpu"]
+wgpu = ["cubecl/wgpu"]
+cpu = ["cubecl/cpu"]
+
+
+
+[dev-dependencies]
+rand = "0.10"
